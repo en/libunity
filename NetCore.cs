@@ -76,7 +76,7 @@ public class NetCore : Singleton<NetCore>
     }
 
     // Update is called once per frame
-    public void Update()
+    void Update()
     {
         while (MsgQueueCount() > 0)
         {
@@ -202,7 +202,10 @@ public class NetCore : Singleton<NetCore>
 
         if (signalled)
         {
+            // 注册回调
             Handle.Register();
+            // 开始接收数据
+            Receive();
             ConnInput(true);
         }
         else
@@ -243,7 +246,7 @@ public class NetCore : Singleton<NetCore>
         }
     }
 
-    public void Receive()
+    void Receive()
     {
         try
         {
