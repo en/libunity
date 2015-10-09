@@ -11,12 +11,8 @@ public enum ENetMsgId {
 	client_error_ack	= 13,	// 客户端错误
 	get_seed_req	= 30,	// socket通信加密使用
 	get_seed_ack	= 31,	// socket通信加密使用
-	start_game_req	= 1001,	// 玩家请求加入一局游戏
-	start_game_succ_ack	= 1002,	// 加入一局游戏成功
-	start_game_fail_ack	= 1003,	// 加入游戏失败
-	cmd_req	= 1004,	//  指令
-	sync_notify	= 1005,	//  同步广播
-	serialize_req	= 1006,	// 客户端序列化请求
+	proto_ping_req	= 1001,	//  ping
+	proto_ping_ack	= 1002,	//  ping回复
 };
 
 }

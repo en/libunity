@@ -48,8 +48,17 @@ namespace NetProto
         {
             Proto.user_login_info info = new Proto.user_login_info();
             info.NetMsgId = (UInt16)Api.ENetMsgId.user_login_req;
-            info.login_ip = new byte[] { 11, 22, 33, 44, 55, 66, 77 };
-            info.udid = SystemInfo.deviceUniqueIdentifier;
+            info.login_way = 1;
+            info.open_udid = "1021868db6647de4e63d5742baed1e7e44ef265d";
+            info.client_certificate = "";
+            info.client_version = 123;
+            info.user_lang = "zh_CN";
+            info.app_id = "foobar1234";
+            info.os_version = "Android 6.0 Marshmallow";
+            info.device_name = "iPhone 6sp Limited Edition";
+            info.device_id = SystemInfo.deviceUniqueIdentifier;
+            info.device_id_type = 3;
+            info.login_ip = "1.2.3.4";
 
             NetCore.Instance.Send(info);
         }
@@ -59,6 +68,7 @@ namespace NetProto
         {
             Proto.ByteArray ba = new Proto.ByteArray(data);
             Proto.user_snapshot snapshot = Proto.user_snapshot.UnPack(ba);
+            Debug.Log("Welcome userid: " + snapshot.uid);
 
             return null;
         }

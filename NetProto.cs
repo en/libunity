@@ -13,7 +13,7 @@ public abstract class NetBase{
 
 //#
 
-//# 基本类型 : integer float string boolean bytes
+//# 基本类型 : integer float string boolean
 
 //# 格式如下所示.若要定义数组，查找array看看已有定义你懂得.
 
@@ -68,20 +68,47 @@ public class error_info : NetBase {
 	}
 }
 
-//#用户登陆发包
+//#用户登陆发包 1代表使用uuid登陆 2代表使用客户端证书登陆
 public class user_login_info : NetBase {
-	public byte[] login_ip;
-	public string udid;
+	public Int32 login_way;
+	public string open_udid;
+	public string client_certificate;
+	public Int32 client_version;
+	public string user_lang;
+	public string app_id;
+	public string os_version;
+	public string device_name;
+	public string device_id;
+	public Int32 device_id_type;
+	public string login_ip;
 
 	public override void Pack(ByteArray w) {
-		w.WriteBytes(this.login_ip);
-		w.WriteUTF(this.udid);
+		w.WriteInt32(this.login_way);
+		w.WriteUTF(this.open_udid);
+		w.WriteUTF(this.client_certificate);
+		w.WriteInt32(this.client_version);
+		w.WriteUTF(this.user_lang);
+		w.WriteUTF(this.app_id);
+		w.WriteUTF(this.os_version);
+		w.WriteUTF(this.device_name);
+		w.WriteUTF(this.device_id);
+		w.WriteInt32(this.device_id_type);
+		w.WriteUTF(this.login_ip);
 
 	}
 	public  static user_login_info UnPack(ByteArray reader){
 		user_login_info tbl = new user_login_info();
-		tbl.login_ip  = reader.ReadBytes();
-		tbl.udid  = reader.ReadUTFBytes();
+		tbl.login_way  = reader.ReadInt32();
+		tbl.open_udid  = reader.ReadUTFBytes();
+		tbl.client_certificate  = reader.ReadUTFBytes();
+		tbl.client_version  = reader.ReadInt32();
+		tbl.user_lang  = reader.ReadUTFBytes();
+		tbl.app_id  = reader.ReadUTFBytes();
+		tbl.os_version  = reader.ReadUTFBytes();
+		tbl.device_name  = reader.ReadUTFBytes();
+		tbl.device_id  = reader.ReadUTFBytes();
+		tbl.device_id_type  = reader.ReadInt32();
+		tbl.login_ip  = reader.ReadUTFBytes();
 
 		return tbl;
 	}
@@ -109,101 +136,14 @@ public class seed_info : NetBase {
 //#用户信息包
 public class user_snapshot : NetBase {
 	public Int32 uid;
-	public byte[] name;
 
 	public override void Pack(ByteArray w) {
 		w.WriteInt32(this.uid);
-		w.WriteBytes(this.name);
 
 	}
 	public  static user_snapshot UnPack(ByteArray reader){
 		user_snapshot tbl = new user_snapshot();
 		tbl.uid  = reader.ReadInt32();
-		tbl.name  = reader.ReadBytes();
-
-		return tbl;
-	}
-}
-
-//#对阵信息
-
-//#frame 开局多少帧
-public class vs_info : NetBase {
-	public Int32 selfMatrixUid;
-	public byte[] param;
-
-	public override void Pack(ByteArray w) {
-		w.WriteInt32(this.selfMatrixUid);
-		w.WriteBytes(this.param);
-
-	}
-	public  static vs_info UnPack(ByteArray reader){
-		vs_info tbl = new vs_info();
-		tbl.selfMatrixUid  = reader.ReadInt32();
-		tbl.param  = reader.ReadBytes();
-
-		return tbl;
-	}
-}
-
-//#命令
-public class command : NetBase {
-	public byte[] cmd;
-
-	public override void Pack(ByteArray w) {
-		w.WriteBytes(this.cmd);
-
-	}
-	public  static command UnPack(ByteArray reader){
-		command tbl = new command();
-		tbl.cmd  = reader.ReadBytes();
-
-		return tbl;
-	}
-}
-
-//#同步
-public class sync_info : NetBase {
-	public Int32 frame;
-	public command[] cmds;
-
-	public override void Pack(ByteArray w) {
-		w.WriteInt32(this.frame);
-		w.WriteUnsignedInt16((UInt16)this.cmds.Length);
-	foreach (command k in this.cmds) {
-		k.Pack(w);
-	}
-
-	}
-	public  static sync_info UnPack(ByteArray reader){
-		sync_info tbl = new sync_info();
-		tbl.frame  = reader.ReadInt32();
-		{
-		UInt16 narr = reader.ReadUnsignedInt16();
-		tbl.cmds = new command[narr];
-		for (int i = 0; i < narr; i++){
-			tbl.cmds[i] = command.UnPack(reader);
-		}
-		}
-
-		return tbl;
-	}
-}
-
-//#序列化
-public class serialize_data : NetBase {
-	public Int32 frame;
-	public byte[] data;
-
-	public override void Pack(ByteArray w) {
-		w.WriteInt32(this.frame);
-		w.WriteBytes(this.data);
-
-	}
-	public  static serialize_data UnPack(ByteArray reader){
-		serialize_data tbl = new serialize_data();
-		tbl.frame  = reader.ReadInt32();
-		tbl.data  = reader.ReadBytes();
 
 		return tbl;
 	}
