@@ -38,9 +38,9 @@ namespace NetProto
 
             // 启用加密通讯
             NetCore.Instance.Encrypt(si.client_send_seed, si.client_receive_seed);
-            UserLoginReq();
 
-            return null;
+            // for testing action input
+            return si;
         }
 
         // 游客登陆

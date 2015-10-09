@@ -28,7 +28,7 @@ public class NetCore : Singleton<NetCore>
     DiffieHellmanManaged dec_dh;
     Queue msg_queue;
     string salt;
-    Dispatcher dispatcher;
+    NetProto.Dispatcher dispatcher;
 
     class StateObject
     {
@@ -72,7 +72,7 @@ public class NetCore : Singleton<NetCore>
 
         msg_queue = new Queue();
         Handle = new NetProto.NetHandle();
-        dispatcher = new Dispatcher();
+        dispatcher = new NetProto.Dispatcher();
     }
 
     // Update is called once per frame
@@ -429,14 +429,14 @@ public class NetCore : Singleton<NetCore>
     }
 
     // 注册收到消息后的数据处理
-    public void RegisterHandler(NetProto.Api.ENetMsgId opc, Dispatcher.MsgHandler handler)
+    public void RegisterHandler(NetProto.Api.ENetMsgId opc, NetProto.Dispatcher.MsgHandler handler)
     {
         dispatcher.RegisterHandler(opc, handler);
     }
 
-    // 注册收到消息后的界面回调
-    public bool RegisterCallback(NetProto.Api.ENetMsgId id, System.Action<object> func, bool autoRemove = true)
+    // 注册数据处理完后的一次性动作
+    public bool RegisterAction(NetProto.Api.ENetMsgId id, System.Action<object> act)
     {
-        return dispatcher.RegisterCallback(id, func, autoRemove);
+        return dispatcher.RegisterAction(id, act);
     }
 }

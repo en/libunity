@@ -1,114 +1,73 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class Dispatcher
+namespace NetProto
 {
-    public delegate object MsgHandler(byte[] data);
-
-    public class HandlerData
+    public class Dispatcher
     {
-        public NetProto.Api.ENetMsgId id;
-        public MsgHandler handler;
+        public delegate object MsgHandler(byte[] data);
 
-
-        public class CallBack
+        class Group
         {
+            public MsgHandler handler;
+            // action注册一次，执行一次，它在handler之后被执行
+            // action的输入为handler的返回值
             public System.Action<object> action;
-            public bool autoRemove;
         }
 
-        public List<CallBack> callBackList;
-    }
+        Dictionary<Api.ENetMsgId, Group> msgMap = new Dictionary<Api.ENetMsgId, Group>();
 
-    Dictionary<NetProto.Api.ENetMsgId, HandlerData> msgTable = new Dictionary<NetProto.Api.ENetMsgId, HandlerData>();
-
-    public Dispatcher()
-    {
-    }
-
-    public bool RegisterHandler(NetProto.Api.ENetMsgId id, MsgHandler handler)
-    {
-        HandlerData data = new HandlerData();
-        data.id = id;
-        data.handler = new MsgHandler(handler);
-
-        if (!msgTable.ContainsKey(id))
+        public Dispatcher()
         {
-            msgTable.Add(id, data);
+        }
+
+        public bool RegisterHandler(Api.ENetMsgId id, MsgHandler handler)
+        {
+            if (msgMap.ContainsKey(id))
+            {
+                Debug.LogError(id + " is already registered");
+                return false;
+            }
+            Group g = new Group();
+            g.handler = new MsgHandler(handler);
+            g.action = null;
+            msgMap.Add(id, g);
+
             return true;
         }
-        else
+
+        public bool RegisterAction(Api.ENetMsgId id, System.Action<object> act)
         {
-            return false;
-        }
-    }
-
-    public bool RegisterCallback(NetProto.Api.ENetMsgId id, System.Action<object> func, bool autoRemove = true)
-    {
-        if (!msgTable.ContainsKey(id))
-        {
-            return false;
-        }
-
-        if (msgTable[id].callBackList == null)
-        {
-            msgTable[id].callBackList = new List<HandlerData.CallBack>();
-        }
-
-        HandlerData.CallBack callback = new HandlerData.CallBack();
-        callback.autoRemove = autoRemove;
-        callback.action = func;
-
-        msgTable[id].callBackList.Add(callback);
-        return true;
-    }
-
-    public bool UnregisterCallback(NetProto.Api.ENetMsgId id, System.Action<object> func)
-    {
-        if (!msgTable.ContainsKey(id))
-        {
-            return false;
-        }
-
-        for (int i = 0; i < msgTable[id].callBackList.Count; i++)
-        {
-            HandlerData.CallBack callback = msgTable[id].callBackList[i];
-            if (callback.action == func)
+            if (!msgMap.ContainsKey(id))
             {
-                msgTable[id].callBackList.RemoveAt(i);
-                return true;
+                Debug.LogError("register handler of " + id + " first");
+                return false;
             }
+
+            msgMap[id].action = act;
+
+            return true;
         }
 
-        return false;
-    }
-
-    public bool InvokeHandler(NetProto.Api.ENetMsgId id, byte[] data)
-    {
-        if (!msgTable.ContainsKey(id))
+        public bool InvokeHandler(Api.ENetMsgId id, byte[] data)
         {
-            Debug.LogError("Invoke handler id:" + id);
-            return false;
-        }
-
-        HandlerData handler_data = msgTable[id];
-
-        object ret = handler_data.handler(data);
-
-        if (handler_data.callBackList != null)
-        {
-            for (int i = 0; i < handler_data.callBackList.Count; i++)
+            if (!msgMap.ContainsKey(id))
             {
-                HandlerData.CallBack callback = handler_data.callBackList[i];
-                callback.action.Invoke(ret);
-                if (callback.autoRemove)
-                {
-                    handler_data.callBackList.RemoveAt(i);
-                    --i;
-                }
+                Debug.LogError(id + " is not registered");
+                return false;
             }
-        }
 
-        return true;
+            Group g = msgMap[id];
+
+            object ret = g.handler(data);
+
+            if (g.action != null)
+            {
+                g.action.Invoke(ret);
+                g.action = null;
+            }
+
+            return true;
+        }
     }
 }
