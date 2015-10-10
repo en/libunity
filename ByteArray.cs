@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace NetProto.Proto
 {
@@ -194,129 +195,101 @@ namespace NetProto.Proto
         public Int16 ReadInt16()
         {
             int count = ms.Read(b16, 0, 2);
-            Int16 res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b16);
-                res = BitConverter.ToInt16(b16, 0);
             }
-            else
-            {
-                res = BitConverter.ToInt16(b16, 0);
-            }
+            Int16 res = BitConverter.ToInt16(b16, 0);
             return res;
         }
 
         public UInt16 ReadUnsignedInt16()
         {
             int count = ms.Read(b16, 0, 2);
-            UInt16 res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b16);
-                res = BitConverter.ToUInt16(b16, 0);
             }
-            else
-            {
-                res = BitConverter.ToUInt16(b16, 0);
-            }
+            UInt16 res = BitConverter.ToUInt16(b16, 0);
             return res;
         }
 
         public Int32 ReadInt32()
         {
             int count = ms.Read(b32, 0, 4);
-            Int32 res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b32);
-                res = BitConverter.ToInt32(b32, 0);
             }
-            else
-            {
-                res = BitConverter.ToInt32(b32, 0);
-            }
+            Int32 res = BitConverter.ToInt32(b32, 0);
             return res;
         }
 
         public UInt32 ReadUnsignedInt32()
         {
             int count = ms.Read(b32, 0, 4);
-            UInt32 res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b32);
-                res = BitConverter.ToUInt32(b32, 0);
             }
-            else
-            {
-                res = BitConverter.ToUInt32(b32, 0);
-            }
+            UInt32 res = BitConverter.ToUInt32(b32, 0);
             return res;
         }
 
         public Int64 ReadInt64()
         {
             int count = ms.Read(b64, 0, 8);
-            Int64 res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b64);
-                res = BitConverter.ToInt64(b64, 0);
             }
-            else
-            {
-                res = BitConverter.ToInt64(b64, 0);
-            }
+            Int64 res = BitConverter.ToInt64(b64, 0);
             return res;
         }
 
         public UInt64 ReadUnsignedInt64()
         {
             int count = ms.Read(b64, 0, 8);
-            UInt64 res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b64);
-                res = BitConverter.ToUInt64(b64, 0);
             }
-            else
-            {
-                res = BitConverter.ToUInt64(b64, 0);
-            }
+            UInt64 res = BitConverter.ToUInt64(b64, 0);
             return res;
         }
 
         public float ReadFloat()
         {
             int count = ms.Read(b32, 0, 4);
-            float res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b32);
-                res = BitConverter.ToSingle(b32, 0);
             }
-            else
-            {
-                res = BitConverter.ToSingle(b32, 0);
-            }
+            float res = BitConverter.ToSingle(b32, 0);
             return res;
         }
 
         public double ReadDouble()
         {
             int count = ms.Read(b64, 0, 8);
-            double res;
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b64);
-                res = BitConverter.ToDouble(b64, 0);
             }
-            else
-            {
-                res = BitConverter.ToDouble(b64, 0);
-            }
+            double res = BitConverter.ToDouble(b64, 0);
             return res;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                ms.Dispose();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.ToString());
+            }
         }
     }
 }

@@ -176,6 +176,7 @@ public class NetCore : Singleton<NetCore>
             Debug.Log(e.ToString());
         }
     }
+
     public void Connect(string host, int port, ConnectionHandler connHandler, MessageHandler msgHandler)
     {
         ConnInput = connHandler;
@@ -319,6 +320,7 @@ public class NetCore : Singleton<NetCore>
         NetProto.Proto.ByteArray ba = new NetProto.Proto.ByteArray();
         packet.Pack(ba);
         byte[] data = ba.Data();
+        ba.Dispose();
         UInt16 id = packet.NetMsgId;
 
         seqid++;

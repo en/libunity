@@ -35,6 +35,7 @@ namespace NetProto
         {
             Proto.ByteArray ba = new Proto.ByteArray(data);
             Proto.seed_info si = Proto.seed_info.UnPack(ba);
+            ba.Dispose();
 
             // 启用加密通讯
             NetCore.Instance.Encrypt(si.client_send_seed, si.client_receive_seed);
@@ -68,6 +69,7 @@ namespace NetProto
         {
             Proto.ByteArray ba = new Proto.ByteArray(data);
             Proto.user_snapshot snapshot = Proto.user_snapshot.UnPack(ba);
+            ba.Dispose();
             Debug.Log("Welcome userid: " + snapshot.uid);
 
             return null;
