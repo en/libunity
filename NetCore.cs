@@ -27,7 +27,6 @@ public class NetCore : Singleton<NetCore>
     DiffieHellmanManaged enc_dh;
     DiffieHellmanManaged dec_dh;
     Queue msg_queue;
-    string salt;
     NetProto.Dispatcher dispatcher;
 
     class StateObject
@@ -54,16 +53,15 @@ public class NetCore : Singleton<NetCore>
         seqid = 0;
         encryptor = null;
         decryptor = null;
-        salt = "DH";
 
         connectDone = new ManualResetEvent(false);
         receiveDone = new ManualResetEvent(false);
 
-        Byte[] _p = BitConverter.GetBytes(0x7FFFFFC3);
+        Byte[] _p = BitConverter.GetBytes(NetProto.Config.DH1PRIME);
         if (BitConverter.IsLittleEndian)
             Array.Reverse(_p);
 
-        Byte[] _g = BitConverter.GetBytes(3);
+        Byte[] _g = BitConverter.GetBytes(NetProto.Config.DH1BASE);
         if (BitConverter.IsLittleEndian)
             Array.Reverse(_g);
 
@@ -123,11 +121,11 @@ public class NetCore : Singleton<NetCore>
         string key2;
         Byte[] _key1 = enc_dh.DecryptKeyExchange(_send);
         BigInteger bi1 = new BigInteger(_key1);
-        key1 = salt + bi1.ToString();
+        key1 = NetProto.Config.SALT + bi1.ToString();
 
         Byte[] _key2 = dec_dh.DecryptKeyExchange(_recv);
         BigInteger bi2 = new BigInteger(_key2);
-        key2 = salt + bi2.ToString();
+        key2 = NetProto.Config.SALT + bi2.ToString();
 
         RC4 rc4enc = RC4.Create();
         RC4 rc4dec = RC4.Create();
