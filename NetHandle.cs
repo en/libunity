@@ -23,7 +23,7 @@ namespace NetProto
             int sendSeed = NetCore.Instance.GetSendSeed();
             int recvSeed = NetCore.Instance.GetReceiveSeed();
             Proto.seed_info si = new Proto.seed_info();
-            si.NetMsgId = (UInt16)Api.ENetMsgId.get_seed_req;
+            si.NetMsgId = (Int16)Api.ENetMsgId.get_seed_req;
             si.client_receive_seed = recvSeed;
             si.client_send_seed = sendSeed;
 
@@ -48,7 +48,7 @@ namespace NetProto
         public void UserLoginReq()
         {
             Proto.user_login_info info = new Proto.user_login_info();
-            info.NetMsgId = (UInt16)Api.ENetMsgId.user_login_req;
+            info.NetMsgId = (Int16)Api.ENetMsgId.user_login_req;
             info.login_way = 1;
             info.open_udid = "1021868db6647de4e63d5742baed1e7e44ef265d";
             info.client_certificate = "";

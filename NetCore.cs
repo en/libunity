@@ -319,7 +319,7 @@ public class NetCore : Singleton<NetCore>
         packet.Pack(ba);
         byte[] data = ba.Data();
         ba.Dispose();
-        UInt16 id = packet.NetMsgId;
+        Int16 id = packet.NetMsgId;
 
         seqid++;
         UInt16 payloadSize = 6; // sizeof(seqid) + sizeof(opcode)
