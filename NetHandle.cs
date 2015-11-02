@@ -12,13 +12,13 @@ namespace NetProto
 
         public void Register()
         {
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.get_seed_ack, KeyExchangeAck);
+            NetCore.Instance.RegisterHandler(Api.ENetMsgId.get_seed_ack, GetSeedAck);
             NetCore.Instance.RegisterHandler(Api.ENetMsgId.user_login_succeed_ack, UserLoginSucceedAck);
             NetCore.Instance.RegisterHandler(Api.ENetMsgId.user_login_faild_ack, UserLoginFailedAck);
         }
 
         // 交换dh密钥请求，将发送客户端公钥到服务器
-        public void KeyExchangeReq()
+        public void GetSeedReq()
         {
             int sendSeed = NetCore.Instance.GetSendSeed();
             int recvSeed = NetCore.Instance.GetReceiveSeed();
@@ -27,12 +27,13 @@ namespace NetProto
             si.client_receive_seed = recvSeed;
             si.client_send_seed = sendSeed;
 
-            NetCore.Instance.Send(si);
+            NetCore.Instance.Send(Api.ENetMsgId.get_seed_req, si);
         }
 
         // 服务器返回公钥
-        public object KeyExchangeAck(byte[] data)
+        public object GetSeedAck(byte[] data)
         {
+            Debug.Log("in GetSeedAck");
             Proto.ByteArray ba = new Proto.ByteArray(data);
             Proto.seed_info si = Proto.seed_info.UnPack(ba);
             ba.Dispose();
@@ -61,7 +62,7 @@ namespace NetProto
             info.device_id_type = 3;
             info.login_ip = "1.2.3.4";
 
-            NetCore.Instance.Send(info);
+            NetCore.Instance.Send(Api.ENetMsgId.user_login_req, info);
         }
 
         // 游客信息

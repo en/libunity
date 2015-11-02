@@ -11,7 +11,7 @@ using Mono.Math;
 using Mono.Security.Cryptography;
 
 
-public class NetCore : Singleton<NetCore>
+public class NetCore : NetProto.Singleton<NetCore>
 {
 
     public delegate void ConnectionHandler(bool conn);
@@ -313,19 +313,19 @@ public class NetCore : Singleton<NetCore>
     }
 
     // 发送数据包
-    public void Send(NetProto.Proto.NetBase packet)
+    public void Send(NetProto.Api.ENetMsgId msgId, NetProto.Proto.NetBase packet)
     {
-        NetProto.Proto.ByteArray ba = new NetProto.Proto.ByteArray();
-        packet.Pack(ba);
-        byte[] data = ba.Data();
-        ba.Dispose();
-        Int16 id = packet.NetMsgId;
-
+        Int16 id = (Int16)msgId;
         seqid++;
-        UInt16 payloadSize = 6; // sizeof(seqid) + sizeof(opcode)
+        UInt16 payloadSize = 6; // sizeof(seqid) + sizeof(msg_id)
+        byte[] data = null;
 
-        if (data != null)
+        if (packet != null)
         {
+            NetProto.Proto.ByteArray ba = new NetProto.Proto.ByteArray();
+            packet.Pack(ba);
+            data = ba.Data();
+            ba.Dispose();
             if (data.Length > UInt16.MaxValue - 6)
             {
                 Debug.LogError(data.Length + " > UInt16.MaxValue-6");

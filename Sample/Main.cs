@@ -32,7 +32,7 @@ namespace Sample
                 System.Action<object> action1 = delegate(object obj)
                 {
                     NetProto.Proto.seed_info si = (NetProto.Proto.seed_info)obj;
-                    Debug.Log("Execute action1");
+                    Debug.Log("in action1");
                     Debug.Log("client_send_seed: " + si.client_send_seed);
                     Debug.Log("client_receive_seed: " + si.client_receive_seed);
                     NetCore.Instance.Handle.UserLoginReq();
@@ -41,7 +41,7 @@ namespace Sample
                 System.Action<object> action2 = delegate(object obj)
                 {
                     NetProto.Proto.seed_info si = (NetProto.Proto.seed_info)obj;
-                    Debug.Log("Execute action2");
+                    Debug.Log("in action2");
                     Debug.Log("client_send_seed: " + si.client_send_seed);
                     Debug.Log("client_receive_seed: " + si.client_receive_seed);
                     NetCore.Instance.Handle.UserLoginReq();
@@ -60,7 +60,10 @@ namespace Sample
                 }
 
                 // 连接成功，发送交换密钥的请求
-                NetCore.Instance.Handle.KeyExchangeReq();
+                // GetSeedReq向服务器发送请求，该请求的回调处理写在NetHandle.cs的GetSeedAck中
+                // 如果有注册action, 会在GetSeedAck后执行，action的输入为GetSeedAck的返回值
+                // 其他消息使用方法类似
+                NetCore.Instance.Handle.GetSeedReq();
             }
             else
             {
