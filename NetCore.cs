@@ -240,6 +240,10 @@ public class NetCore : NetProto.Singleton<NetCore>
                 receiveDone.Set();
             }
         }
+        catch (ObjectDisposedException)
+        {
+            // 主动调用了Close()
+        }
         catch (Exception e)
         {
             Debug.Log(e.ToString());
@@ -443,5 +447,19 @@ public class NetCore : NetProto.Singleton<NetCore>
     public bool RegisterAction(NetProto.Api.ENetMsgId id, System.Action<object> act)
     {
         return dispatcher.RegisterAction(id, act);
+    }
+
+    // 关闭网络连接
+    public void Close()
+    {
+        try
+        {
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.ToString());
+        }
     }
 }

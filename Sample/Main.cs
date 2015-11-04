@@ -9,6 +9,7 @@ namespace Sample
         // 修改下面的IP和端口
         const string address = "192.168.0.14";
         const int port = 8888;
+        float heartbeatCount = 0;
 
         // Use this for initialization
         void Start()
@@ -20,7 +21,11 @@ namespace Sample
         // Update is called once per frame
         void Update()
         {
-
+            heartbeatCount += Time.deltaTime;
+            if (heartbeatCount > 30) {
+                NetCore.Instance.Handle.HeartBeatReq();
+                heartbeatCount = 0;
+            }
         }
 
         // 连接处理
@@ -71,6 +76,12 @@ namespace Sample
         void MsgHandler(string message)
         {
             Debug.Log(message);
+        }
+
+        // In the editor this is called when the user stops playmode. In the web player it is called when the web view is closed.
+        void OnApplicationQuit()
+        {
+            NetCore.Instance.Close();
         }
     }
 }
