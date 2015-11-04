@@ -16,17 +16,22 @@ public class NetCore : NetProto.Singleton<NetCore>
 
     public delegate void ConnectionHandler(bool conn);
     public delegate void MessageHandler(string message);
-    public ConnectionHandler ConnInput { get; set; }
-    public MessageHandler MsgInput { get; set; }
-    Socket socket;
-    ManualResetEvent connectDone;
-    ManualResetEvent receiveDone;
+    ConnectionHandler ConnInput { get; set; }
+    MessageHandler MsgInput { get; set; }
+    // Client socket.
+    Socket socket = null;
+
+    // ManualResetEvent instances signal completion.
+    ManualResetEvent connectDone = new ManualResetEvent(false);
+    ManualResetEvent sendDone = new ManualResetEvent(false);
+    ManualResetEvent receiveDone = new ManualResetEvent(false);
+
     UInt32 seqid;
     ICryptoTransform encryptor;
     ICryptoTransform decryptor;
-    DiffieHellmanManaged enc_dh;
-    DiffieHellmanManaged dec_dh;
-    Queue msg_queue;
+    DiffieHellmanManaged dhEnc;
+    DiffieHellmanManaged dhDec;
+    Queue msgQueue;
     NetProto.Dispatcher dispatcher;
 
     class StateObject
@@ -35,13 +40,13 @@ public class NetCore : NetProto.Singleton<NetCore>
         public int header = 0;
         // Receive buffer.
         public byte[] buffer = new byte[NetProto.Config.BUFFER_SIZE];
-        // Received data string.
+        // Received data.
         public MemoryStream ms = new MemoryStream();
     }
 
     public NetProto.NetHandle Handle { get; set; }
 
-    public struct Msg
+    struct Msg
     {
         public NetProto.Api.ENetMsgId id;
         public byte[] data;
@@ -49,13 +54,9 @@ public class NetCore : NetProto.Singleton<NetCore>
 
     protected NetCore()
     {
-
         seqid = 0;
         encryptor = null;
         decryptor = null;
-
-        connectDone = new ManualResetEvent(false);
-        receiveDone = new ManualResetEvent(false);
 
         Byte[] _p = BitConverter.GetBytes(NetProto.Config.DH1PRIME);
         if (BitConverter.IsLittleEndian)
@@ -65,10 +66,10 @@ public class NetCore : NetProto.Singleton<NetCore>
         if (BitConverter.IsLittleEndian)
             Array.Reverse(_g);
 
-        enc_dh = new DiffieHellmanManaged(_p, _g, 31);
-        dec_dh = new DiffieHellmanManaged(_p, _g, 31);
+        dhEnc = new DiffieHellmanManaged(_p, _g, 31);
+        dhDec = new DiffieHellmanManaged(_p, _g, 31);
 
-        msg_queue = new Queue();
+        msgQueue = new Queue();
         Handle = new NetProto.NetHandle();
         dispatcher = new NetProto.Dispatcher();
     }
@@ -83,29 +84,29 @@ public class NetCore : NetProto.Singleton<NetCore>
         }
     }
 
-    public void PushMsg(NetProto.Api.ENetMsgId id, byte[] data)
+    void PushMsg(NetProto.Api.ENetMsgId id, byte[] data)
     {
-        lock (msg_queue.SyncRoot)
+        lock (msgQueue.SyncRoot)
         {
             Msg msg = new Msg();
             msg.id = id;
             msg.data = data;
 
-            msg_queue.Enqueue(msg);
+            msgQueue.Enqueue(msg);
         }
     }
 
-    public Msg PopMsg()
+    Msg PopMsg()
     {
-        lock (msg_queue.SyncRoot)
+        lock (msgQueue.SyncRoot)
         {
-            return (Msg)msg_queue.Dequeue();
+            return (Msg)msgQueue.Dequeue();
         }
     }
 
-    public int MsgQueueCount()
+    int MsgQueueCount()
     {
-        return msg_queue.Count;
+        return msgQueue.Count;
     }
 
     // 加密通讯
@@ -119,11 +120,11 @@ public class NetCore : NetProto.Singleton<NetCore>
             Array.Reverse(_recv);
         string key1;
         string key2;
-        Byte[] _key1 = enc_dh.DecryptKeyExchange(_send);
+        Byte[] _key1 = dhEnc.DecryptKeyExchange(_send);
         BigInteger bi1 = new BigInteger(_key1);
         key1 = NetProto.Config.SALT + bi1.ToString();
 
-        Byte[] _key2 = dec_dh.DecryptKeyExchange(_recv);
+        Byte[] _key2 = dhDec.DecryptKeyExchange(_recv);
         BigInteger bi2 = new BigInteger(_key2);
         key2 = NetProto.Config.SALT + bi2.ToString();
 
@@ -143,14 +144,14 @@ public class NetCore : NetProto.Singleton<NetCore>
 
     public Int32 GetSendSeed()
     {
-        byte[] data = enc_dh.CreateKeyExchange();
+        byte[] data = dhEnc.CreateKeyExchange();
         BigInteger i = new BigInteger(data);
         return i % Int32.MaxValue;
     }
 
     public Int32 GetReceiveSeed()
     {
-        byte[] data = dec_dh.CreateKeyExchange();
+        byte[] data = dhDec.CreateKeyExchange();
         BigInteger i = new BigInteger(data);
         return i % Int32.MaxValue;
     }
@@ -303,8 +304,11 @@ public class NetCore : NetProto.Singleton<NetCore>
     {
         try
         {
-            // Complete send.
-            socket.EndSend(ar);
+            // Complete sending the data to the remote device.
+            int bytesSent = socket.EndSend(ar);
+            Debug.Log("Sent " + bytesSent + " bytes to server.");
+            // Signal that all bytes have been sent.
+            sendDone.Set();
         }
         catch (Exception e)
         {
@@ -372,6 +376,7 @@ public class NetCore : NetProto.Singleton<NetCore>
 
         if (socket.Connected)
         {
+            sendDone.Reset();
             socket.BeginSend(buffer, 0, buffer.Length, 0, new AsyncCallback(SendCallback), socket);
         }
     }

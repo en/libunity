@@ -31,19 +31,13 @@ namespace Sample
                 // for testing action register
                 System.Action<object> action1 = delegate(object obj)
                 {
-                    NetProto.Proto.seed_info si = (NetProto.Proto.seed_info)obj;
                     Debug.Log("in action1");
-                    Debug.Log("client_send_seed: " + si.client_send_seed);
-                    Debug.Log("client_receive_seed: " + si.client_receive_seed);
                     NetCore.Instance.Handle.UserLoginReq();
                 };
 
                 System.Action<object> action2 = delegate(object obj)
                 {
-                    NetProto.Proto.seed_info si = (NetProto.Proto.seed_info)obj;
                     Debug.Log("in action2");
-                    Debug.Log("client_send_seed: " + si.client_send_seed);
-                    Debug.Log("client_receive_seed: " + si.client_receive_seed);
                     NetCore.Instance.Handle.UserLoginReq();
                 };
 
