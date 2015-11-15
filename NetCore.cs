@@ -14,10 +14,12 @@ using Mono.Security.Cryptography;
 public class NetCore : NetProto.Singleton<NetCore>
 {
 
-    public delegate void ConnectionHandler(bool conn);
-    public delegate void MessageHandler(string message);
-    ConnectionHandler ConnInput { get; set; }
-    MessageHandler MsgInput { get; set; }
+    public delegate void AfterConnHook(bool conn);
+    public delegate void BeforeSendHook(NetProto.Api.ENetMsgId msgId, byte[] data);
+    public delegate void AfterRecvHook(NetProto.Api.ENetMsgId msgId);
+    public AfterConnHook _afterConnHook { get; set; }
+    public BeforeSendHook _beforeSendHook { get; set; }
+    public AfterRecvHook _afterRecvHook { get; set; }
     // Client socket.
     Socket socket = null;
 
@@ -26,7 +28,7 @@ public class NetCore : NetProto.Singleton<NetCore>
     ManualResetEvent sendDone = new ManualResetEvent(false);
     ManualResetEvent receiveDone = new ManualResetEvent(false);
 
-    UInt32 seqid;
+    UInt32 seqId;
     ICryptoTransform encryptor;
     ICryptoTransform decryptor;
     DiffieHellmanManaged dhEnc;
@@ -54,7 +56,7 @@ public class NetCore : NetProto.Singleton<NetCore>
 
     protected NetCore()
     {
-        seqid = 0;
+        seqId = 0;
         encryptor = null;
         decryptor = null;
 
@@ -72,6 +74,8 @@ public class NetCore : NetProto.Singleton<NetCore>
         msgQueue = new Queue();
         Handle = new NetProto.NetHandle();
         dispatcher = new NetProto.Dispatcher();
+        // 注册回调
+        dispatcher.Register(Handle);
     }
 
     // Update is called once per frame
@@ -156,7 +160,7 @@ public class NetCore : NetProto.Singleton<NetCore>
         return i % Int32.MaxValue;
     }
 
-    // handles the completion of the prior asynchronous 
+    // handles the completion of the prior asynchronous
     // connect call.
     void ConnectCallback(IAsyncResult ar)
     {
@@ -176,15 +180,12 @@ public class NetCore : NetProto.Singleton<NetCore>
         }
     }
 
-    public void Connect(string host, int port, ConnectionHandler connHandler, MessageHandler msgHandler)
+    public void Connect(string host, int port)
     {
-        ConnInput = connHandler;
-        MsgInput = msgHandler;
-
         BeginConnect(host, port);
     }
 
-    // Asynchronous connect using host name (resolved by the 
+    // Asynchronous connect using host name (resolved by the
     // BeginConnect call.)
     void BeginConnect(string host, int port)
     {
@@ -196,22 +197,23 @@ public class NetCore : NetProto.Singleton<NetCore>
         socket.BeginConnect(host, port,
             new AsyncCallback(ConnectCallback), socket);
 
-        // wait here until the connect finishes.  The callback 
+        // wait here until the connect finishes.  The callback
         // sets connectDone.
         bool signalled = connectDone.WaitOne(NetProto.Config.CONNECTION_TIMEOUT, true);
 
         if (signalled)
         {
-            // 注册回调
-            Handle.Register();
             // 开始接收数据
             Receive();
-            ConnInput(true);
         }
         else
         {
             Debug.Log("Connection timeout");
-            ConnInput(false);
+        }
+
+        if (_afterConnHook != null)
+        {
+            _afterConnHook(signalled);
         }
     }
 
@@ -235,7 +237,7 @@ public class NetCore : NetProto.Singleton<NetCore>
             }
             else
             {
-                MsgInput("Disconnected");
+                Debug.Log("Disconnected from server");
                 // Signal that all bytes have been received.
                 receiveDone.Set();
             }
@@ -246,6 +248,8 @@ public class NetCore : NetProto.Singleton<NetCore>
         }
         catch (Exception e)
         {
+            // 如果socket已经断了，报这个异常
+            //  System.Net.Sockets.SocketException: Connection timed out
             Debug.Log(e.ToString());
         }
     }
@@ -324,8 +328,8 @@ public class NetCore : NetProto.Singleton<NetCore>
     public void Send(NetProto.Api.ENetMsgId msgId, NetProto.Proto.NetBase packet)
     {
         Int16 id = (Int16)msgId;
-        seqid++;
-        UInt16 payloadSize = 6; // sizeof(seqid) + sizeof(msg_id)
+        seqId++;
+        UInt16 payloadSize = 6; // sizeof(seqid) + sizeof(msgid)
         byte[] data = null;
 
         if (packet != null)
@@ -342,11 +346,16 @@ public class NetCore : NetProto.Singleton<NetCore>
             payloadSize += (UInt16)data.Length;
         }
 
+        if (_beforeSendHook != null)
+        {
+            _beforeSendHook(msgId, data);
+        }
+
         // payload
         byte[] payload = new byte[payloadSize];
 
         // seqid
-        Byte[] _seqid = BitConverter.GetBytes(seqid);
+        Byte[] _seqid = BitConverter.GetBytes(seqId);
         if (BitConverter.IsLittleEndian)
             Array.Reverse(_seqid);
         _seqid.CopyTo(payload, 0);
@@ -378,10 +387,16 @@ public class NetCore : NetProto.Singleton<NetCore>
         // =>payload
         encrypted.CopyTo(buffer, 2);
 
-        if (socket.Connected)
+        sendDone.Reset();
+        try
         {
-            sendDone.Reset();
             socket.BeginSend(buffer, 0, buffer.Length, 0, new AsyncCallback(SendCallback), socket);
+        }
+        catch (Exception e)
+        {
+            // 如果socket已经断了，报这个异常
+            // System.Net.Sockets.SocketException: The socket is not connected
+            Debug.Log(e.ToString());
         }
     }
 
@@ -407,8 +422,14 @@ public class NetCore : NetProto.Singleton<NetCore>
         Int16 id = BitConverter.ToInt16(opcode, 0);
         byte[] data = binReader.ReadBytes(encrypted.GetLength(0) - 2);
 
+        NetProto.Api.ENetMsgId msgId = (NetProto.Api.ENetMsgId)id;
+        if (_afterRecvHook != null)
+        {
+            _afterRecvHook(msgId);
+        }
+
         // 将数据压入到消息队列中.
-        PushMsg((NetProto.Api.ENetMsgId)id, data);
+        PushMsg(msgId, data);
         s.Close();
     }
 
@@ -449,17 +470,32 @@ public class NetCore : NetProto.Singleton<NetCore>
         return dispatcher.RegisterAction(id, act);
     }
 
+    // 处理消息
+    public bool Invoke(NetProto.Api.ENetMsgId id, byte[] data)
+    {
+        return dispatcher.InvokeHandler(id, data);
+    }
+
     // 关闭网络连接
     public void Close()
     {
         try
         {
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
+            if (socket != null)
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+            }
         }
         catch (Exception e)
         {
             Debug.Log(e.ToString());
+        }
+        finally
+        {
+            seqId = 0;
+            encryptor = null;
+            decryptor = null;
         }
     }
 }

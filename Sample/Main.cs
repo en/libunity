@@ -14,8 +14,12 @@ namespace Sample
         // Use this for initialization
         void Start()
         {
+            // 注册hooks
+            NetCore.Instance._afterConnHook = AfterConnHook;
+            NetCore.Instance._beforeSendHook = BeforeSendHook;
+            NetCore.Instance._afterRecvHook = AfterRecvHook;
             // 连接服务器
-            NetCore.Instance.Connect(address, port, ConnHandler, MsgHandler);
+            NetCore.Instance.Connect(address, port);
         }
 
         // Update is called once per frame
@@ -24,39 +28,30 @@ namespace Sample
             heartbeatCount += Time.deltaTime;
             if (heartbeatCount > 30) {
                 NetCore.Instance.Handle.HeartBeatReq();
-                heartbeatCount = 0;
             }
         }
 
         // 连接处理
-        void ConnHandler(bool conn)
+        void AfterConnHook(bool conn)
         {
             if (conn)
             {
-                // for testing action register
-                System.Action<object> action1 = delegate(object obj)
+                System.Action<object> loggedInAction = delegate(object obj)
                 {
-                    Debug.Log("in action1");
+                    // 登陆成功
+                    Debug.Log("Welcome userid: " + (int)obj);
+                };
+
+                System.Action<object> loginAction = delegate(object obj)
+                {
+                    // 注册登陆成功后初始化游戏数据
+                    NetCore.Instance.RegisterAction(NetProto.Api.ENetMsgId.user_login_succeed_ack, loggedInAction);
+                    // 加密连接成功，用户登陆
                     NetCore.Instance.Handle.UserLoginReq();
                 };
 
-                System.Action<object> action2 = delegate(object obj)
-                {
-                    Debug.Log("in action2");
-                    NetCore.Instance.Handle.UserLoginReq();
-                };
-
-                int r = UnityEngine.Random.Range(0, 100);
-                Debug.Log("r = " + r);
-                // 注册一次性回调动作
-                if (r > 50)
-                {
-                    NetCore.Instance.RegisterAction(NetProto.Api.ENetMsgId.get_seed_ack, action1);
-                }
-                else
-                {
-                    NetCore.Instance.RegisterAction(NetProto.Api.ENetMsgId.get_seed_ack, action2);
-                }
+                // 注册加密连接成功后的回调
+                NetCore.Instance.RegisterAction(NetProto.Api.ENetMsgId.get_seed_ack, loginAction);
 
                 // 连接成功，发送交换密钥的请求
                 // GetSeedReq向服务器发送请求，该请求的回调处理写在NetHandle.cs的GetSeedAck中
@@ -71,11 +66,16 @@ namespace Sample
             }
         }
 
-        // 服务器通知处理
-        // 这个方法不是在主线程调用的
-        void MsgHandler(string message)
+        void BeforeSendHook(NetProto.Api.ENetMsgId msgId, byte[] data)
         {
-            Debug.Log(message);
+            Debug.Log("SEND " + msgId);
+            // 发出一条消息后重置心跳时间
+            heartbeatCount = 0;
+        }
+
+        void AfterRecvHook(NetProto.Api.ENetMsgId msgId)
+        {
+            Debug.Log("RECV " + msgId);
         }
 
         // In the editor this is called when the user stops playmode. In the web player it is called when the web view is closed.

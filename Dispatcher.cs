@@ -21,6 +21,14 @@ namespace NetProto
         {
         }
 
+        public void Register(NetHandle handle)
+        {
+            foreach(var v in handle.handlerMap)
+            {
+                RegisterHandler(v.Key, v.Value);
+            }
+        }
+
         public bool RegisterHandler(Api.ENetMsgId id, MsgHandler handler)
         {
             if (msgMap.ContainsKey(id))

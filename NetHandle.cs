@@ -1,23 +1,21 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 namespace NetProto
 {
     public class NetHandle
     {
+        public Dictionary<Api.ENetMsgId, Dispatcher.MsgHandler> handlerMap = new Dictionary<Api.ENetMsgId, Dispatcher.MsgHandler>();
 
         public NetHandle()
         {
-        }
-
-        public void Register()
-        {
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.heart_beat_ack, HeartBeatAck);
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.user_login_succeed_ack, UserLoginSucceedAck);
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.user_login_faild_ack, UserLoginFaildAck);
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.client_error_ack, ClientErrorAck);
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.get_seed_ack, GetSeedAck);
-            NetCore.Instance.RegisterHandler(Api.ENetMsgId.proto_ping_ack, ProtoPingAck);
+            handlerMap.Add(Api.ENetMsgId.heart_beat_ack, HeartBeatAck);
+            handlerMap.Add(Api.ENetMsgId.user_login_succeed_ack, UserLoginSucceedAck);
+            handlerMap.Add(Api.ENetMsgId.user_login_faild_ack, UserLoginFaildAck);
+            handlerMap.Add(Api.ENetMsgId.client_error_ack, ClientErrorAck);
+            handlerMap.Add(Api.ENetMsgId.get_seed_ack, GetSeedAck);
+            handlerMap.Add(Api.ENetMsgId.proto_ping_ack, ProtoPingAck);
         }
 
         public void HeartBeatReq()
@@ -56,8 +54,6 @@ namespace NetProto
             Proto.ByteArray ba = new Proto.ByteArray(data);
             Proto.user_snapshot snapshot = Proto.user_snapshot.UnPack(ba);
             ba.Dispose();
-
-            Debug.Log("Welcome userid: " + snapshot.uid);
 
             return snapshot.uid;
         }
