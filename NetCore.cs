@@ -479,23 +479,27 @@ public class NetCore : NetProto.Singleton<NetCore>
     // 关闭网络连接
     public void Close()
     {
-        try
+        if (socket != null)
         {
-            if (socket != null)
+            try
             {
                 socket.Shutdown(SocketShutdown.Both);
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.ToString());
+            }
+            try
+            {
                 socket.Close();
             }
+            catch (Exception e)
+            {
+                Debug.Log(e.ToString());
+            }
         }
-        catch (Exception e)
-        {
-            Debug.Log(e.ToString());
-        }
-        finally
-        {
-            seqId = 0;
-            encryptor = null;
-            decryptor = null;
-        }
+        seqId = 0;
+        encryptor = null;
+        decryptor = null;
     }
 }
