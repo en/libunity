@@ -228,7 +228,9 @@ public class NetCore : NetProto.Singleton<NetCore>
             if (bytesRead > 0)
             {
                 // There might be more data, so store the data received so far.
+                state.ms.Seek(0, SeekOrigin.End);
                 state.ms.Write(state.buffer, 0, bytesRead);
+                state.ms.Seek(0, SeekOrigin.Begin);
                 // Handle data.
                 TryHandleData(state);
                 //  Get the rest of the data.
@@ -273,7 +275,6 @@ public class NetCore : NetProto.Singleton<NetCore>
 
     void TryHandleData(StateObject state)
     {
-        state.ms.Seek(0, SeekOrigin.Begin);
         long length = state.ms.Length;
         BinaryReader reader = new BinaryReader(state.ms);
 
@@ -287,6 +288,7 @@ public class NetCore : NetProto.Singleton<NetCore>
             }
             state.header = BitConverter.ToUInt16(_size, 0);
         }
+
         if (state.header > 0 && length >= state.header)
         {
             byte[] data = reader.ReadBytes(state.header);
@@ -298,14 +300,13 @@ public class NetCore : NetProto.Singleton<NetCore>
 
         if (state.ms.Length != length)
         {
-            byte[] data = reader.ReadBytes((int)(state.ms.Length - length));
-            state.ms.Seek(0, SeekOrigin.Begin);
             state.ms = new MemoryStream();
-            state.ms.Write(data, 0, data.Length);
+            if (length > 0)
+            {
+                byte[] data = reader.ReadBytes((int)(length));
+                state.ms.Write(data, 0, data.Length);
+            }
         }
-
-        reader.Close();
-        state.ms.Seek(0, SeekOrigin.End);
     }
 
     void SendCallback(IAsyncResult ar)
