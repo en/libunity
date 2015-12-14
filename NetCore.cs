@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -185,17 +186,17 @@ public class NetCore : NetProto.Singleton<NetCore>
         BeginConnect(host, port);
     }
 
-    // Asynchronous connect using host name (resolved by the
-    // BeginConnect call.)
+    // Asynchronous connect using host name or address
     void BeginConnect(string host, int port)
     {
+        IPHostEntry lipa = Dns.GetHostEntry(host);
+        IPEndPoint lep = new IPEndPoint(lipa.AddressList[0], port);
         socket = new Socket(AddressFamily.InterNetwork,
             SocketType.Stream,
             ProtocolType.Tcp);
 
         connectDone.Reset();
-        socket.BeginConnect(host, port,
-            new AsyncCallback(ConnectCallback), socket);
+        socket.BeginConnect(lep, new AsyncCallback(ConnectCallback), socket);
 
         // wait here until the connect finishes.  The callback
         // sets connectDone.
