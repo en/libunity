@@ -281,32 +281,38 @@ public class NetCore : NetProto.Singleton<NetCore>
 
         while (true)
         {
-            if (state.header == 0 && length >= NetProto.Config.HEADER_SIZE)
+            if (state.header == 0)
             {
-                byte[] _size = reader.ReadBytes(NetProto.Config.HEADER_SIZE);
-                length -= NetProto.Config.HEADER_SIZE;
-                if (BitConverter.IsLittleEndian)
+                if (length >= NetProto.Config.HEADER_SIZE)
                 {
-                    Array.Reverse(_size);
+                    byte[] _size = reader.ReadBytes(NetProto.Config.HEADER_SIZE);
+                    length -= NetProto.Config.HEADER_SIZE;
+                    if (BitConverter.IsLittleEndian)
+                    {
+                        Array.Reverse(_size);
+                    }
+                    state.header = BitConverter.ToUInt16(_size, 0);
                 }
-                state.header = BitConverter.ToUInt16(_size, 0);
-            }
-            else
-            {
-                break;
+                else
+                {
+                    break;
+                }
             }
 
-            if (state.header > 0 && length >= state.header)
+            if (state.header > 0)
             {
-                byte[] data = reader.ReadBytes(state.header);
-                length -= state.header;
-                DecryptStream(data);
-                // Reset header.
-                state.header = 0;
-            }
-            else
-            {
-                break;
+                if (length >= state.header)
+                {
+                    byte[] data = reader.ReadBytes(state.header);
+                    length -= state.header;
+                    DecryptStream(data);
+                    // Reset header.
+                    state.header = 0;
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 
