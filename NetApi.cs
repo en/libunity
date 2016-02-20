@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace NetProto.Api
 {
     public enum ENetMsgId
-    { 
+    {
         heart_beat_req = 0, // 心跳包..
         heart_beat_ack = 1, // 心跳包回复
         user_login_req = 10, // 登陆

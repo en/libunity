@@ -13,11 +13,11 @@ namespace NetProto.Proto
     }
 
     public class auto_id : NetBase
-    { 
+    {
         public Int32 id;
 
         public override void Pack(ByteArray w)
-        { 
+        {
             w.WriteInt32(this.id);
         }
 
@@ -31,12 +31,12 @@ namespace NetProto.Proto
     }
 
     public class error_info : NetBase
-    { 
+    {
         public Int32 code;
         public string msg;
 
         public override void Pack(ByteArray w)
-        { 
+        {
             w.WriteInt32(this.code);
             w.WriteUTF(this.msg);
         }
@@ -52,7 +52,7 @@ namespace NetProto.Proto
     }
 
     public class user_login_info : NetBase
-    { 
+    {
         public Int32 login_way;
         public string open_udid;
         public string client_certificate;
@@ -66,7 +66,7 @@ namespace NetProto.Proto
         public string login_ip;
 
         public override void Pack(ByteArray w)
-        { 
+        {
             w.WriteInt32(this.login_way);
             w.WriteUTF(this.open_udid);
             w.WriteUTF(this.client_certificate);
@@ -100,12 +100,12 @@ namespace NetProto.Proto
     }
 
     public class seed_info : NetBase
-    { 
+    {
         public Int32 client_send_seed;
         public Int32 client_receive_seed;
 
         public override void Pack(ByteArray w)
-        { 
+        {
             w.WriteInt32(this.client_send_seed);
             w.WriteInt32(this.client_receive_seed);
         }
@@ -121,11 +121,11 @@ namespace NetProto.Proto
     }
 
     public class user_snapshot : NetBase
-    { 
+    {
         public Int32 uid;
 
         public override void Pack(ByteArray w)
-        { 
+        {
             w.WriteInt32(this.uid);
         }
 
