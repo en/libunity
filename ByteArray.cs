@@ -172,7 +172,7 @@ namespace NetProto.Proto
         {
             UInt16 n = ReadUnsignedInt16();
             byte[] byteArray = new byte[n];
-            int count = ms.Read(byteArray, 0, n);
+            ms.Read(byteArray, 0, n);
             return byteArray;
         }
 
@@ -194,7 +194,7 @@ namespace NetProto.Proto
 
         public Int16 ReadInt16()
         {
-            int count = ms.Read(b16, 0, 2);
+            ms.Read(b16, 0, 2);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b16);
@@ -205,7 +205,7 @@ namespace NetProto.Proto
 
         public UInt16 ReadUnsignedInt16()
         {
-            int count = ms.Read(b16, 0, 2);
+            ms.Read(b16, 0, 2);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b16);
@@ -216,7 +216,7 @@ namespace NetProto.Proto
 
         public Int32 ReadInt32()
         {
-            int count = ms.Read(b32, 0, 4);
+            ms.Read(b32, 0, 4);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b32);
@@ -227,7 +227,7 @@ namespace NetProto.Proto
 
         public UInt32 ReadUnsignedInt32()
         {
-            int count = ms.Read(b32, 0, 4);
+            ms.Read(b32, 0, 4);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b32);
@@ -238,7 +238,7 @@ namespace NetProto.Proto
 
         public Int64 ReadInt64()
         {
-            int count = ms.Read(b64, 0, 8);
+            ms.Read(b64, 0, 8);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b64);
@@ -249,7 +249,7 @@ namespace NetProto.Proto
 
         public UInt64 ReadUnsignedInt64()
         {
-            int count = ms.Read(b64, 0, 8);
+            ms.Read(b64, 0, 8);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b64);
@@ -260,7 +260,7 @@ namespace NetProto.Proto
 
         public float ReadFloat()
         {
-            int count = ms.Read(b32, 0, 4);
+            ms.Read(b32, 0, 4);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b32);
@@ -271,7 +271,7 @@ namespace NetProto.Proto
 
         public double ReadDouble()
         {
-            int count = ms.Read(b64, 0, 8);
+            ms.Read(b64, 0, 8);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b64);
