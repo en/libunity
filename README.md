@@ -1,7 +1,8 @@
-# gonet/2 unity 客户端网络库
+# gonet/2 Unity 客户端网络库
 
-1. 新建unity project
-2. Assets下新建文本文件smcs.rsp, 因为mono库中使用了unsafe关键字(需要重启unity)
+1. 打开Unity, New project
+2. 打开project所在目录, 新建文本文件Assets/smcs.rsp, 内容如下:  
+(2、3顺序如果错了就要重启Unity)
 
   ```
   -unsafe
@@ -13,10 +14,9 @@
   $ git clone https://github.com/en/libunity.git Assets/Scripts/NetLib
   ```
 
-4. 新建一个Empty Object, 添加脚本组件Sample/Main.cs
-5. 部署好gonet/2服务端, 修改Main.cs中的IP地址, 运行unity测试
+4. Create Empty, 新建一个空的GameObject, 选择GameObject, 添加脚本组件Assets/Scripts/NetLib/Sample/Main.cs
+5. 部署好gonet/2服务端, 修改Main.cs中的IP地址, 运行Unity测试
 
-***
 
 ## 简明易懂的服务端部署教程(适用于快速体验或开发环境)
 
@@ -80,37 +80,38 @@ Docker version 1.11.2, build b9f10c9
   $ docker exec etcd /etcdctl -C http://172.17.42.1:2379 set /seqs/userid 0
   $ docker exec etcd /etcdctl -C http://172.17.42.1:2379 set /seqs/snowflake-uuid 0
   ```
-  * 注意: 快速体验mongodb/elk等暂时不需要, 游戏配置也不需要上传到etcd, 目前线上的代码没有用到游戏配置
+  * 注意: 快速体验mongodb/elk等暂时不需要, 游戏配置也不需要上传到etcd
 
 4. 获取代码
 
   ```
-  $ mkdir ~/gonet2
+  $ mkdir -p ~/gonet2/src
   $ cd ~/gonet2/
-  $ git clone https://github.com/gonet2/agent.git
-  $ git clone https://github.com/gonet2/game.git
-  $ git clone https://github.com/gonet2/snowflake.git
+  $ export GOPATH=`pwd`
+  $ git clone https://github.com/gonet2/agent.git ./src/agent
+  $ git clone https://github.com/gonet2/game.git ./src/game
+  $ git clone https://github.com/gonet2/snowflake.git ./src/snowflake
   ```
 
 5. 编译并运行
   ```
-  $ cd ~/gonet2/snowflake/
-  $ export GOPATH=`pwd`
+  $ cd ~/gonet2/
+  # 需要go版本支持vendor, 比如1.5.2就不支持
   $ go install snowflake
   # 启动snowflake
   $ ./bin/snowflake
 
   # 开一个新的终端
-  $ cd ~/gonet2/game/
-  $ export GOPATH=`pwd`
+  $ cd ~/gonet2/
   $ go install game
   $ ./bin/game
 
   # 再开一个新的终端...
-  $ cd ~/gonet2/agent/
-  $ export GOPATH=`pwd`
+  $ cd ~/gonet2/
   $ go install agent
   $ ./bin/agent
+  
+  # Unity观察Console, 服务器自己调整日志级别吧
   ```
   * 注意: 如果服务之间的rpc有改动, 需要运行tools/pb-gen.sh(可能要根据自己情况改一下)更新.pb.go文件;
     如果和客户端的协议有变化, 需要在tools/proto_scripts下生成新的协议文件, 拷贝到服务器和客户端的相应位置
