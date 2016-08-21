@@ -82,7 +82,7 @@ Docker version 1.11.2, build b9f10c9
   ```
   * 注意: 快速体验mongodb/elk等暂时不需要, 游戏配置也不需要上传到etcd
 
-4. 获取代码
+4. 获取代码和编译
 
   ```
   $ mkdir -p ~/gonet2/src
@@ -91,25 +91,23 @@ Docker version 1.11.2, build b9f10c9
   $ git clone https://github.com/gonet2/agent.git ./src/agent
   $ git clone https://github.com/gonet2/game.git ./src/game
   $ git clone https://github.com/gonet2/snowflake.git ./src/snowflake
-  ```
-
-5. 编译并运行
-  ```
-  $ cd ~/gonet2/
+  
   # 需要go版本支持vendor, 比如1.5.2就不支持
   $ go install snowflake
+  $ go install game
+  $ go install agent
+  ```
+
+5. 运行
+  ```
   # 启动snowflake
-  $ ./bin/snowflake
+  $ ~/gonet2/bin/snowflake
 
   # 开一个新的终端
-  $ cd ~/gonet2/
-  $ go install game
-  $ ./bin/game
+  $ ~/gonet2/bin/game
 
-  # 再开一个新的终端...
-  $ cd ~/gonet2/
-  $ go install agent
-  $ ./bin/agent
+  # 再开一个终端...
+  $ ~/gonet2/bin/agent
   
   # Unity观察Console, 服务器自己调整日志级别吧
   ```
